@@ -1,0 +1,251 @@
+* {
+    margin: 0;
+}
+
+html {
+	height: 100%;
+}
+
+/* Font style for security questions in registration page */
+
+.group label {
+  font-size: 16px;
+}
+
+/* Font style  */
+
+body {
+    font-family: Helvetica, Arial;
+    height: 100%;
+}
+
+/* styles for Grid of login and registration page */
+
+.bgBox {
+    background-color: #f9f9f9;
+    padding: 50px;
+    border-radius: 5px;
+    border: 2px solid #dedede; 
+    max-width: 430px;
+    margin: 0 auto;
+    margin-bottom: 100px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    position:relative;
+	 
+}
+
+/* styles for login and registration heading */
+
+.bgBox h2 { 
+    margin-top: 0;
+    font-size: 23px;
+    color: #484848;
+    text-align: center;
+    margin-bottom: 35px;
+    font-weight: bold;
+}
+
+/* styles for input fields of login and registration page */
+
+.bgBox input {
+    border-radius: 3px;
+    padding-top: 1px;
+    transition: none;
+    -webkit-transition: none;
+    height: 47px;
+    padding: 0 15px;
+    box-shadow: none;
+    font-size: 15px;
+    line-height: 16px;
+    border: 1px solid #dedede;
+    font-weight: normal;
+    color: #484848;
+    width: 100%;
+    outline: none;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+/* styles for button  */
+
+.bgBox input[type="button"] {
+    height: 50px;
+    font-size: 21px;
+}
+
+span {
+    clear: both;
+    font-size: 12px;
+    line-height: 8px;
+    color: #e8322e !important;
+    padding: 8px 0 0 0;
+    text-align: center;
+}
+
+
+/* make select and textarea responsive registration page */
+
+.bgBox .inputRow textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+    overflow: auto;
+} 
+
+/* make select and textarea responsive registration page */
+
+.bgBox .inputRow select , dropdown {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+  overflow: auto;
+  height:46px;
+    
+} 
+
+/* make input box responsive */
+
+.bgBox .inputRow {
+    padding: 6px 0;
+    margin-bottom: 8px;
+    overflow: auto;
+}
+
+/* make input box responsive */
+
+
+
+/* styles for radio button of registration page */
+
+.bgBox .radiobutton {
+    padding: 6px 0;
+    margin-bottom: 4px;
+}
+
+/* styles for register and Login button of registration and login page */
+
+.bgBox .inputRow.submit {
+	
+    margin-top: 10px;
+    
+}
+
+.bgBox .inputRow .signIn {
+    color: #fff;
+    background: #5795d2;
+    border-color: #5795d2;
+    font-weight: bold;
+    cursor: pointer;
+ }
+
+/* styles for mouse over on login and register button */
+
+.bgBox .inputRow .signIn:hover {
+    background: #3c78b3;
+}
+
+/* test for modal */
+
+/* .bgBox .inputRow .exampleModal {
+    color: #fff;
+    background: #5795d2;
+    border-color: #5795d2;
+    font-weight: bold;
+    cursor: pointer;
+ }
+
+.bgBox .inputRow .exampleModal:hover {
+    background: #3c78b3;
+} */
+/* styles for image , if any inserted in future */
+
+.bgBox .inputRow .signIn.loading {
+    background: #5795d2 url("preloader.gif")center no-repeat;
+    text-indent: -10000px;
+}
+
+/* styles for change password and  Login change password */
+
+		#dropdownMenuButton{
+			background:#004d80;
+			border-color:#004d80;
+			}
+			
+			#dropdown-item  {
+			 background-color:#004d80; 
+			border-color:#004d80; 
+			color:white;
+			font-color:white;
+			}
+			#text{
+			color:white;
+			}
+			#text:hover {
+    		background: #3c78b3;
+			}
+
+/* styles for login form */
+
+.loginForm {
+    position: relative;
+    top: 40%;
+    margin-top: -215px;
+    
+   /*  margin-bottom:50;  */
+}
+
+#form {
+	margin: 2% auto;
+}
+
+/* make window responsive in all mode (portrait and landscape) */
+
+@media (max-width: 420px) {
+    
+    .bgBox {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .loginForm {
+        top: 0;
+        margin: 0;
+        bottom: 0;
+    }
+
+    .bgBox h2 {
+        margin-bottom: 20px;
+    }
+
+}
+
+@media (max-width: 320px) {
+
+    .bgBox {
+        padding: 30px;
+    }
+
+    .bgBox h2 {
+        font-size: 20px;
+    }
+
+}
+
+@media (max-width: 230px) {
+    
+    .bgBox {
+        min-width: 230px;
+    }
+
+}
+
+
+
