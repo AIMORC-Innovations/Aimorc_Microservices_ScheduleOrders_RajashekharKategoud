@@ -45,6 +45,7 @@ public class CheckoutController {
 		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
 		int userid = Integer.parseInt(result);
 		date.setUserid(userid);
+		System.out.println("date scheduler "+ this.dateServices.getScheduler(date.getUserid()));
 		return this.dateServices.getScheduler(date.getUserid());
 	}
 	@RequestMapping(value = "/setSchedulerAddress", method = RequestMethod.POST, produces = "application/json")
@@ -56,7 +57,7 @@ public class CheckoutController {
 			String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
 			int userid = Integer.parseInt(result);
 			Integer datefromdb = dateRepo.findByUserid(userid);
-			System.out.println("checkout.getDel_address1()"+checkout.getDel_address1());
+			System.out.println("schedulingPickUpAddr"+checkout.getDel_address1());
 			dateServices.updatePickUpAddr(checkout.getCity(),checkout.getCountry(),checkout.getDel_address1(),checkout.getState(),checkout.getZip(), userid);
 	}
 	
@@ -69,7 +70,7 @@ public class CheckoutController {
 			String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
 			int userid = Integer.parseInt(result);
 			Integer datefromdb = dateRepo.findByUserid(userid);
-			System.out.println("checkout.getDel_address1()"+checkout.getDel_address1());
+			System.out.println("getschedulingPickUpAddr"+checkout.getDel_address1());
 			dateServices.updatePickUpAddr(checkout.getCity(),checkout.getCountry(),checkout.getDel_address1(),checkout.getState(),checkout.getZip(), userid);
 	}
 
@@ -87,10 +88,12 @@ public class CheckoutController {
 		
 		if (datefromdb == null) {
 			
+			System.out.println("date from db null "+dateServices.schedulingPickUp(checkout, userid));
 			dateServices.schedulingPickUp(checkout, userid);
 
 			
 		} else {
+			System.out.println("date from db not null "+dateServices.updatePickUp(checkout.getDate(),checkout.getDel_address1()	, userid));
 			dateServices.updatePickUp(checkout.getDate(),checkout.getDel_address1()	, userid);
 		}
 
@@ -104,6 +107,7 @@ public class CheckoutController {
 		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
 		int userid = Integer.parseInt(result);
 		date.setUserid(userid);
+		System.out.println("cancel scheduled adress "+this.dateServices.cancelPickUp(date));
 		return this.dateServices.cancelPickUp(date);
 	}
 
@@ -117,9 +121,9 @@ public class CheckoutController {
 			String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
 			String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
 			int userid = (int) Integer.parseInt(result);
-			System.out.println(userid);
+			System.out.println(userid+" deliveryProfileAddr is "+ this.dateServices.deliveryProfileAddr(userid));
 			return this.dateServices.deliveryProfileAddr(userid);
-
+            
 
 }
 	  
@@ -127,12 +131,12 @@ public class CheckoutController {
 	  @ResponseBody
 	  public Map<String, Object>   displaydeliveryAddr(@RequestBody Check checkout) 
 	      {
-		 
+		    System.out.println("display delivery profile address");
 		    String token = checkout.getToken();
 			String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
 			String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
 			int userid = (int) Integer.parseInt(result);
-			System.out.println(userid);
+			System.out.println(userid + " displaydeliveryAddr is "+this.dateServices.displaydeliveryAddress(userid));
 			return this.dateServices.displaydeliveryAddress(userid);
 
 
@@ -141,7 +145,7 @@ public class CheckoutController {
 	  @ResponseBody
 	  public boolean  deliveryAddress(@RequestBody  Check checkout) 
 	      {
-	
+	        
 		    String token = checkout.getToken();
 			String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
 			String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
