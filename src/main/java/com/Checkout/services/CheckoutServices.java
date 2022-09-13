@@ -11,9 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.Checkout.Repository.DateRepository;
 import com.Checkout.Repository.DeliveryRepository;
+import com.Checkout.Repository.ScheduleAddressRepository;
 import com.Checkout.entity.Check;
 import com.Checkout.entity.Date;
 import com.Checkout.entity.DeliveryAddress;
+import com.Checkout.entity.ScheduledAddress;
 
 
 @Service
@@ -23,11 +25,18 @@ public class CheckoutServices{
 	private DateRepository daterepository;
 	@Autowired
 	private DeliveryRepository deliveryrepository;
+	@Autowired
+	private ScheduleAddressRepository scheduledaddressrepository;
 	
-	public Date getScheduler(int userid) {
-		return daterepository.fetchDate(userid);
+	public List<Map<Date, Object>> getScheduler(int userid, String date, String del_address1, String city, String state, String country, String zip) {
+		System.out.println("repo" + daterepository.fetchDate(userid, date, del_address1, city, state, country, zip));
+		//return daterepository.fetchDate(userid, date, del_address1, city, state, country, zip);
+		return daterepository.fetchDate(userid, date, del_address1, city, state, country, zip);
 	}
 	
+	public List<Map<ScheduledAddress, Object>> getScheduledAddress(int userid, String address,String address1,String city,String state,String country,String zip, String status, int address_id, String date_and_time, int scheduled_id ){
+		return scheduledaddressrepository.fetchDate(userid, address, address1,city,state,country,zip,status,address_id,  date_and_time, scheduled_id);
+	}
 	
 	public Date schedulingPickUp(Check checkout, int userid) {
 		Date date = new Date();
@@ -41,6 +50,26 @@ public class CheckoutServices{
 		
 		return daterepository.save(date);
 	}
+	
+	public int schedulingPickUpAddress(ScheduledAddress scheduledAddress, int userid) {
+		scheduledAddress.getDate_and_time();
+		scheduledAddress.getAddress_id();
+		scheduledAddress.getStatus();
+		scheduledAddress.getAddress();
+		System.out.println(scheduledAddress.getDate_and_time()+"                      "+"              "+ userid );
+		//scheduledaddressrepository.saveScheduledPickUpAddress(scheduledAddress.getDate_and_time(), scheduledAddress.getAddress_id(), userid );
+		//return new ResponseEntity<String>("Scheduled address Successfully", HttpStatus.OK);
+		return scheduledaddressrepository.saveScheduledPickUpAddress(scheduledAddress.getDate_and_time(), scheduledAddress.getAddress_id(),scheduledAddress.getAddress(), scheduledAddress.getStatus(), userid );
+	}
+	
+	public int editscheduledPickUpAddress(ScheduledAddress scheduledAddress, int userid) {
+		scheduledAddress.getDate_and_time();
+		scheduledAddress.getAddress_id();
+		scheduledAddress.getStatus();
+		scheduledAddress.getAddress();
+		System.out.println(scheduledAddress.getDate_and_time()+"                      "+"              "+ userid );
+		return scheduledaddressrepository.editScheduledPickUpAddress(scheduledAddress.getDate_and_time(), scheduledAddress.getAddress_id(),scheduledAddress.getScheduled_id(), userid );
+	} 
 	 
 
 	
@@ -56,6 +85,16 @@ public class CheckoutServices{
 		daterepository.delete(date.getUserid());
 		return new ResponseEntity<String>("Deleted Successfully", HttpStatus.OK);
 		
+	}
+	
+	public ResponseEntity<String> deleteScheduledPickUp(ScheduledAddress scheduledAddress){
+		scheduledaddressrepository.delete(scheduledAddress.getScheduled_id(),scheduledAddress.getUserid() );
+		return new ResponseEntity<String>("Deleted Successfully", HttpStatus.OK);
+	}
+	
+	public ResponseEntity<String> cancelScheduledPickUp(ScheduledAddress scheduledAddress){
+		scheduledaddressrepository.cancel(scheduledAddress.getScheduled_id(),scheduledAddress.getStatus(), scheduledAddress.getUserid() );
+		return new ResponseEntity<String>("Deleted Successfully", HttpStatus.OK);
 	}
 
 
@@ -102,11 +141,10 @@ public class CheckoutServices{
 
 
 
-	public int updatePickUpAddr(String city, String country, String del_address1, String state, String zip,
-			int userid) {
+	public Date updatePickUpAddr(String city, String country, String del_address1, String state, String zip,int userid) {
 		// TODO Auto-generated method stub
 		return daterepository.saveAddress(del_address1,country,city,state,zip,userid);
-	}
+		}
 	
 	/*
 	 * public List<Object> displaydelAddress1(int userid) {

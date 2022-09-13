@@ -11,6 +11,7 @@
 	<groupId>ScheduleOrders</groupId>
 	<artifactId>ScheduleOrders</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>ScheduleOrders</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
@@ -65,6 +66,14 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+        		<groupId>com.heroku.sdk</groupId>
+        		<artifactId>heroku-maven-plugin</artifactId>
+        		<version>3.0.3</version>
+        		<configuration>
+  					<appName>aimorc-e-commerce</appName>
+				</configuration>
+      		</plugin>
 		</plugins>
 	</build>
 
