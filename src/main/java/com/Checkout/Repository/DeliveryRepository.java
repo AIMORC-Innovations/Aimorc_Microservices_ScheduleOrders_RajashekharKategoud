@@ -1,6 +1,7 @@
 package com.Checkout.Repository;
 
 import java.util.List;
+
 import java.util.Map;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,16 +9,36 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.Checkout.entity.Check;
-import com.Checkout.entity.Date;
 import com.Checkout.entity.DeliveryAddress;
+import com.Checkout.entity.ScheduledAddress;
+
+
 @Repository
+@Transactional
 public interface DeliveryRepository extends JpaRepository<DeliveryAddress,Integer> {
 
 	
 	@Query(value = "select userid from deliveryAddress where userid=?",nativeQuery = true)
 	public Integer findByUserid(@Param("userid")int userid);
+	
+	@Modifying
+	@Query(value = "insert into deliveryAddress(address_id, userid) values (:address_id, :userid)",nativeQuery = true)
+	public Integer saveAddr(@Param("address_id")int address_id, @Param("userid")int userid);
+	
+	@Query(value = "select u.address, u.address1, u.city, u.state, u.country, u.zip, d.del_id, d.userid from user_address u join deliveryAddress d on u.address_id = d.address_id where d.userid=?",nativeQuery = true)
+	public List<Map<ScheduledAddress, Object>> fetchAddress(@Param("userid")int userid, @Param("address")String address, @Param("address1") String address1, @Param("city") String city, @Param("state") String state, @Param("country") String country, @Param("zip") String zip,     
+			 @Param("address_id") int address_id , @Param("del")int del_id);
+	
+	
+	@Modifying
+	@Query(value = "update deliveryAddress set address_id=:address_id where userid=:userid ",nativeQuery = true)
+	public int editDeliveryAddress( @Param("address_id") int address_id,  @Param("userid")int userid);
+    
+	
+	@Query(value ="select count(*) from deliveryAddress where userid=?",nativeQuery = true) //select
+	public Integer fetchNumberOfAddress(@Param("userid")int userid);
 	
 	@Query(value = "select r.address,  d.del_address1, d.del_address2 from registration r join deliveryAddress d on r.userid = d.userid where d.userid= ?",nativeQuery = true)
 	public Map<String, Object> getAddress(@Param("userid")int userid);

@@ -22,6 +22,7 @@ public class DeliveryAddress {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int del_id;
 	private int userid;
+	private String token;
   	private String del_address1;
 	private String del_address2;
 	   

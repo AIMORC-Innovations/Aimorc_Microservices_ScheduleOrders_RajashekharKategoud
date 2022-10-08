@@ -23,6 +23,8 @@ public interface ScheduleAddressRepository extends JpaRepository<ScheduledAddres
 	@Query(value = "insert into scheduled_addresses(address_id,address,userid,date_and_time,status) values (:address_id,:address,:userid,:date_and_time,:status)",nativeQuery = true)
 	public int saveScheduledPickUpAddress( @Param("date_and_time")String date_and_time, @Param("address_id") int address_id,@Param("address") String address, @Param("status") String status,  @Param("userid")int userid);
 
+	@Query(value = "select * from scheduled_addresses where  userid=? and address_id=?", nativeQuery = true)
+	public ScheduledAddress findByUserId(@Param("userid") int userid, @Param("address_id") int address_id);
 	
 	@Modifying
 	@Query(value = "update scheduled_addresses set date_and_time=:date_and_time, address_id=:address_id where userid=:userid and scheduled_id=:scheduled_id",nativeQuery = true)
@@ -30,13 +32,18 @@ public interface ScheduleAddressRepository extends JpaRepository<ScheduledAddres
     
 	
 	//@Query(value = "select * from scheduled_addresses where userid=?",nativeQuery = true) //select * from date where userid=?
-	@Query(value = "select u.address, u.address1, u.city, u.state, u.country, u.zip, s.scheduled_id, s.userid, s.date_and_time, s.status from user_address u join scheduled_addresses s on u.address_id = s.address_id where s.userid=?",nativeQuery = true)
+	@Query(value = "select u.address_id, u.address, u.address1, u.city, u.state, u.country, u.zip, s.scheduled_id, s.userid, s.date_and_time, s.status from user_address u join scheduled_addresses s on u.address_id = s.address_id where s.userid=?",nativeQuery = true)
 	public List<Map<ScheduledAddress, Object>> fetchDate(@Param("userid")int userid, @Param("address")String address, @Param("address1") String address1, @Param("city") String city, @Param("state") String state, @Param("country") String country, @Param("zip") String zip,     
 			@Param("date_and_time")String date_and_time, @Param("address_id") int address_id ,@Param("status")String status, @Param("scheduled_id")int scheduled_id);
 	
 	@Modifying
     @Query(value = "delete from scheduled_addresses where scheduled_id=:scheduled_id and userid=:userid", nativeQuery = true)
     public int delete(int scheduled_id, int userid);
+	
+	
+	@Modifying
+    @Query(value = "delete from scheduled_addresses where address_id=:address_id and userid=:userid", nativeQuery = true)
+    public int deleteAddressId(int address_id, int userid);
 	
 	@Modifying
     @Query(value = "update scheduled_addresses set status=:status where scheduled_id=:scheduled_id and userid=:userid", nativeQuery = true)

@@ -15,7 +15,7 @@ public class Check {
 		private String userid;
 		private String date;
 		private String token;
-		private String address_id;
+		private int address_id; //String
 		private String country;
 		private String state;
 		private String city;

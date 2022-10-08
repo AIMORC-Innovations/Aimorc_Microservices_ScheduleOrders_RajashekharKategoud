@@ -1,9 +1,12 @@
 package com.Checkout.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,9 +70,24 @@ public class CheckoutController {
 		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
 		int userid = Integer.parseInt(result);
 		scheduledAddress.setUserid(userid);
-		return this.dateServices.getScheduledAddress(scheduledAddress.getUserid(),scheduledAddress.getAddress(),scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(), scheduledAddress.getZip(), scheduledAddress.getStatus(), scheduledAddress.getAddress_id(), scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id() );
+		System.out.println(scheduledAddress.getAddress_id()+"----------");
+		return this.dateServices.getScheduledAddress(scheduledAddress.getUserid(), scheduledAddress.getAddress(),scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(), scheduledAddress.getZip(), scheduledAddress.getStatus(), scheduledAddress.getAddress_id(), scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id() );
 	}  
 	
+	@RequestMapping(value = "/getDeliveryAddress", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public  List<Map<ScheduledAddress, Object>> getDeliveryAddress(@RequestBody Check checkout){
+		ScheduledAddress scheduledAddress = new ScheduledAddress();
+		DeliveryAddress deliveryaddress = new DeliveryAddress();
+		String token = checkout.getToken();
+		System.out.println("2                 " +token);
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		scheduledAddress.setUserid(userid);
+		System.out.println(scheduledAddress.getState());
+		return this.dateServices.getDeliveryAddress(scheduledAddress.getUserid(),scheduledAddress.getAddress(),scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(), scheduledAddress.getZip(), scheduledAddress.getAddress_id(), deliveryaddress.getDel_id() );
+	}  
 	
 	
 	@RequestMapping(value = "/setSchedulerAddress", method = RequestMethod.POST, produces = "application/json")
@@ -167,6 +185,25 @@ public class CheckoutController {
 		dateServices.editscheduledPickUpAddress(scheduledAddress, userid);
 
 	}
+	
+	
+	@RequestMapping(value = "/editDeliveryAddress", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public void editDeliveryAddress(@RequestBody ScheduledAddress scheduledAddress) {
+		
+		String token = scheduledAddress.getToken();
+		System.out.println("token   " + token);
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		System.out.println("tokenUsername           "+ tokenUsername);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		System.out.println("result      " + result);
+		int userid = Integer.parseInt(result);
+		System.out.println("userid       " + userid);
+		System.out.println("getting error");
+		System.out.println(scheduledAddress);
+		dateServices.editDeliveryAddress(scheduledAddress, userid);
+
+	}
 
 	@RequestMapping(value = "/cancelScheduler", method = RequestMethod.POST, produces = "application/json")
 	public ResponseEntity<String> cancelPickUp(@RequestBody Check checkout) {
@@ -191,6 +228,37 @@ public class CheckoutController {
 		System.out.println("scheduledAddress-------"+scheduledAddress);
 		System.out.println("cancel scheduled adress "+this.dateServices.deleteScheduledPickUp(scheduledAddress));
 		return this.dateServices.deleteScheduledPickUp(scheduledAddress);
+	}
+	
+	@RequestMapping(value = "/checkAddressId", method = RequestMethod.POST, produces = "application/json")
+	public void checkAddressId(@RequestBody ScheduledAddress scheduledAddress, HttpServletRequest request, HttpServletResponse response)
+			throws  ServletException, IOException{
+		//ScheduledAddress scheduledAddress = new ScheduledAddress();
+		String token = scheduledAddress.getToken();
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		scheduledAddress.setUserid(userid);
+		System.out.println(userid);
+		System.out.println(scheduledAddress.getAddress_id());
+		if(dateServices.checkAddress(userid, scheduledAddress.getAddress_id() )) {
+			response.setStatus(200);
+		}else {
+			response.sendError(401, "Invalid Authenication");
+		}
+	}
+	
+	@RequestMapping(value = "/deleteAddressId", method = RequestMethod.POST, produces = "application/json")
+	public ResponseEntity<String> deleteAddressId(@RequestBody ScheduledAddress scheduledAddress) {
+		//ScheduledAddress scheduledAddress = new ScheduledAddress();
+		String token = scheduledAddress.getToken();
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		scheduledAddress.setUserid(userid);
+		System.out.println("scheduledAddress-------"+scheduledAddress);
+		System.out.println("cancel scheduled adress "+this.dateServices.deleteScheduledAddress(scheduledAddress));
+		return this.dateServices.deleteScheduledAddress(scheduledAddress);
 	}
 	
 
@@ -238,6 +306,26 @@ public class CheckoutController {
 
 
 }
+	  
+	  @RequestMapping(value = "/addDeliveryAddr", method = RequestMethod.POST, produces = "application/json")
+	  @ResponseBody
+	  public boolean  addDeliveryAddress(@RequestBody  Check checkout) {
+		  String token = checkout.getToken();
+			String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+   		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+			int userid = Integer.parseInt(result);
+			Integer numberOfAddress = deliveryRepo.fetchNumberOfAddress(userid);	
+			if(numberOfAddress<1) {
+				dateServices.addDeliveryAddr(checkout.getAddress_id(),userid);
+			}
+			else {
+				System.out.println("delivery address added");
+			}
+			
+			new ResponseEntity<String>("success!", HttpStatus.ACCEPTED);
+			return true;
+	  }
+	  
 	  @RequestMapping(value = "/updatedeliveryAddr", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public boolean  deliveryAddress(@RequestBody  Check checkout) 

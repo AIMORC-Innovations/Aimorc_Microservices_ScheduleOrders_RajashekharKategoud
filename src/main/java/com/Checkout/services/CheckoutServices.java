@@ -34,8 +34,12 @@ public class CheckoutServices{
 		return daterepository.fetchDate(userid, date, del_address1, city, state, country, zip);
 	}
 	
-	public List<Map<ScheduledAddress, Object>> getScheduledAddress(int userid, String address,String address1,String city,String state,String country,String zip, String status, int address_id, String date_and_time, int scheduled_id ){
+	public List<Map<ScheduledAddress, Object>> getScheduledAddress(int userid,  String address,String address1,String city,String state,String country,String zip, String status, int address_id, String date_and_time, int scheduled_id ){
 		return scheduledaddressrepository.fetchDate(userid, address, address1,city,state,country,zip,status,address_id,  date_and_time, scheduled_id);
+	}
+	
+	public List<Map<ScheduledAddress, Object>> getDeliveryAddress(int userid, String address,String address1,String city,String state,String country,String zip, int address_id,  int del_id ){
+		return deliveryrepository.fetchAddress(userid, address, address1,city,state,country,zip,address_id, del_id);
 	}
 	
 	public Date schedulingPickUp(Check checkout, int userid) {
@@ -70,6 +74,12 @@ public class CheckoutServices{
 		System.out.println(scheduledAddress.getDate_and_time()+"                      "+"              "+ userid );
 		return scheduledaddressrepository.editScheduledPickUpAddress(scheduledAddress.getDate_and_time(), scheduledAddress.getAddress_id(),scheduledAddress.getScheduled_id(), userid );
 	} 
+	
+	public int editDeliveryAddress(ScheduledAddress scheduledAddress, int userid) {
+		scheduledAddress.getUserid();
+		scheduledAddress.getAddress_id();
+		return deliveryrepository.editDeliveryAddress(scheduledAddress.getAddress_id(), userid );
+	} 
 	 
 
 	
@@ -92,6 +102,19 @@ public class CheckoutServices{
 		return new ResponseEntity<String>("Deleted Successfully", HttpStatus.OK);
 	}
 	
+	public ResponseEntity<String> deleteScheduledAddress(ScheduledAddress scheduledAddress){
+		scheduledaddressrepository.deleteAddressId(scheduledAddress.getAddress_id(),scheduledAddress.getUserid() );
+		return new ResponseEntity<String>("Deleted Successfully", HttpStatus.OK);
+	}
+	
+	public boolean checkAddress(int userid, int address_id) {
+		ScheduledAddress scheduledAddress = scheduledaddressrepository.findByUserId(userid, address_id);
+		if(scheduledAddress.getAddress_id() == 0) {
+			return false;
+		}
+		return true;
+	}
+	
 	public ResponseEntity<String> cancelScheduledPickUp(ScheduledAddress scheduledAddress){
 		scheduledaddressrepository.cancel(scheduledAddress.getScheduled_id(),scheduledAddress.getStatus(), scheduledAddress.getUserid() );
 		return new ResponseEntity<String>("Deleted Successfully", HttpStatus.OK);
@@ -112,6 +135,11 @@ public class CheckoutServices{
 		//delAddr2.setUserid(userid);
 		//delAddr2.setDel_address2(del_address2);
 		return deliveryrepository.updateAddress3(del_address1,del_address2,userid);
+	}
+	
+	@Transactional
+	public int addDeliveryAddr(int address_id, int userid) {
+		return deliveryrepository.saveAddr(address_id, userid);
 	}
 	
 	@Transactional
