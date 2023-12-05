@@ -33,5 +33,12 @@ public class ScheduledAddress {
 	private String country;
 	private String zip;
 	private String status;
+	private int measurement_id;
+	private String firstname;
+	private String lastname;
+	private String phonenum;
+
+	
+
 
 }

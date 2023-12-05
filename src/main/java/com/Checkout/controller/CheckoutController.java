@@ -1,6 +1,9 @@
 package com.Checkout.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -27,6 +31,39 @@ import com.Checkout.entity.Date;
 import com.Checkout.entity.DeliveryAddress;
 import com.Checkout.entity.ScheduledAddress;
 import com.Checkout.services.CheckoutServices;
+
+//from here added
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+
+import com.itextpdf.awt.geom.Rectangle;
+//pdf download
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import com.itextpdf.text.Image;
+
 
 @Controller
 @CrossOrigin("*")
@@ -42,6 +79,132 @@ public class CheckoutController {
 	private DeliveryRepository deliveryRepo;
 
 	RestTemplate restTemplate = new RestTemplate();
+	
+	private ObjectMapper objectMapper = new ObjectMapper();
+
+    public void RouteServiceController(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
+    
+    //@GetMapping("/calculateDistance")
+    @RequestMapping(value = "/calculateDistance", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+    public String calculateDistance(
+            @RequestParam("startLat") String startLat,
+            @RequestParam("startLon") String startLon,
+            @RequestParam("endLat") String endLat,
+            @RequestParam("endLon") String endLon
+    ) {
+        String apiKey = "5b3ce3597851110001cf6248561b9913668b440b935ebfe2b5877858";
+        String url = String.format("https://api.openrouteservice.org/v2/directions/driving-car?api_key=%s&start=%s,%s&end=%s,%s&units=m",
+                apiKey, startLon, startLat, endLon, endLat);
+
+        HttpHeaders headers = new HttpHeaders();
+        RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, URI.create(url));
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+        String responseBody = responseEntity.getBody();
+
+        try {
+            JsonNode responseJson = objectMapper.readTree(responseBody);
+            JsonNode features = responseJson.get("features");
+            if (features != null && features.isArray() && features.size() > 0) {
+                JsonNode properties = features.get(0).get("properties");
+                if (properties != null) {
+                    double totalDistance = 0.0;
+                    JsonNode segments = properties.get("segments");
+                    if (segments != null && segments.isArray()) {
+                        for (JsonNode segment : segments) {
+                            double distance = segment.get("distance").asDouble();
+                            totalDistance += distance;
+                        }
+                    }
+                    double totalDistanceKm = totalDistance / 1000.0;
+                    System.out.println(totalDistanceKm);
+                    return String.valueOf(totalDistanceKm);//return totalDistance;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        throw new RuntimeException("Failed to parse the response and extract the distance.");
+    }
+
+//    @GetMapping("/calculateDistance")
+//    public Double calculateDistance(
+//            @RequestParam("startLat") String startLat,
+//            @RequestParam("startLon") String startLon,
+//            @RequestParam("endLat") String endLat,
+//            @RequestParam("endLon") String endLon
+//    ) {
+//        String apiKey = "5b3ce3597851110001cf6248561b9913668b440b935ebfe2b5877858";
+//        String url = String.format("https://api.openrouteservice.org/v2/directions/driving-car?api_key=%s&start=%s,%s&end=%s,%s",
+//                apiKey, startLon, startLat, endLon, endLat);
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        //headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+//
+//        RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, URI.create(url));
+//
+//        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+//        String responseBody = responseEntity.getBody();
+//
+//        try {
+//            JsonNode responseJson = objectMapper.readTree(responseBody);
+//            JsonNode routes = responseJson.get("routes");
+//            if (routes != null && routes.isArray() && routes.size() > 0) {
+//            	JsonNode properties = routes.get(0).get("properties");
+//                JsonNode summary = routes.get(0).get("summary");
+//                if (summary != null) {
+////                    double distance = summary.get("distance").asDouble();
+////                    return distance;
+//                	double totalDistance = 0.0;
+//                    JsonNode segments = summary.get("segments");
+//                    if (segments != null && segments.isArray()) {
+//                        for (JsonNode segment : segments) {
+//                            double distance = segment.get("distance").asDouble();
+//                            String distanceUnit = segment.get("distance_unit").asText();
+//                            if (distanceUnit.equals("m")) {
+//                                totalDistance += distance;
+//                            } else if (distanceUnit.equals("km")) {
+//                                totalDistance += distance * 1000; // Convert kilometers to meters
+//                            }
+//                        }
+//                    }
+//                    return totalDistance;
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        throw new RuntimeException("Failed to parse the response and extract the distance.");
+//    }
+	
+//	@GetMapping("/calculateDistance")
+//    public String calculateDistance(
+//            @RequestParam("startLat") String startLat,
+//            @RequestParam("startLon") String startLon,
+//            @RequestParam("endLat") String endLat,
+//            @RequestParam("endLon") String endLon
+//    ) {
+//        String apiKey = "5b3ce3597851110001cf6248561b9913668b440b935ebfe2b5877858";
+//        String url = String.format("https://api.openrouteservice.org/v2/directions/driving-car?api_key=%s&start=%s,%s&end=%s,%s",
+//                apiKey, startLon, startLat, endLon, endLat);
+//        
+//        RestTemplate restTemplate = new RestTemplate();
+//        String response = restTemplate.getForObject(url, String.class);
+//        
+//        // Parse the response JSON to extract the distance
+//        // You can use a JSON parsing library like Jackson or Gson for this
+//        // Assuming the JSON structure is {"routes":[{"summary":{"distance":123.45}}]}
+//        // you can extract the distance as follows:
+//        // double distance = Double.parseDouble(response.routes[0].summary.distance);
+//        
+//        return response; // Return the response from OpenRouteService API
+//    }
 
 	@RequestMapping(value = "/getScheduler", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
@@ -74,6 +237,248 @@ public class CheckoutController {
 		return this.dateServices.getScheduledAddress(scheduledAddress.getUserid(), scheduledAddress.getAddress(),scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(), scheduledAddress.getZip(), scheduledAddress.getStatus(), scheduledAddress.getAddress_id(), scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id() );
 	}  
 	
+	@RequestMapping(value = "/getMyMeasurements", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public  List<Map<ScheduledAddress, Object>> getMyMeasurements(@RequestBody Check checkout){
+		String token = checkout.getToken();
+		System.out.println("2                 " +token);
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		System.out.println("--->"+userid );
+		checkout.setUserid(userid);
+		//System.out.println(this.dateServices.getMyMeasurements(userid));
+		//return this.dateServices.getMyMeasurements( userid );
+		return this.dateServices.getMyMeasurementsForMySchedules( checkout.getUserid());
+	}  
+	
+	@RequestMapping(value = "/getMyMeasurementsForMySchedules", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public  List<Map<ScheduledAddress, Object>> getMyMeasurementsForMySchedules(@RequestBody Check checkout){
+//		String token = checkout.getToken();
+//		System.out.println("2                 " +token);
+//		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+//		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+//		int userid = Integer.parseInt(result);
+//		System.out.println("--->"+userid );
+//		checkout.setUserid(userid);
+		//System.out.println(this.dateServices.getMyMeasurements(userid));
+		return this.dateServices.getMyMeasurementsForMySchedules( checkout.getUserid());
+	}  
+	/*
+	@PostMapping("/getMyMeasurementsForScheudle")
+	@ResponseBody
+	public Map<String, Object> getUserAddressDetails(@RequestBody Check checkout) {
+		String token = checkout.getToken();
+		System.out.println("2                 " +token);
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		System.out.println("--->"+userid );
+		checkout.setUserid(userid);
+		Map<String, Object> myMeasurements = dateServices.getMyMeasurementsDetails(userid);
+		return myMeasurements; //useraddressdetails
+	}*/
+	
+	@RequestMapping(value = "/getAllScheduledAddress", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public  List<Map<ScheduledAddress, Object>> getAllScheduledAddress(@RequestBody Check checkout){
+		ScheduledAddress scheduledAddress = new ScheduledAddress();
+		String token = checkout.getToken();
+		System.out.println("2                 " +token);
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		scheduledAddress.setUserid(userid);
+		System.out.println("<---->"+userid);
+		System.out.println(scheduledAddress.getUserid());
+		List<Map<String, Object>> Address=this.dateServices.getMyAddress(userid);
+		String designerCity = null;
+		String designerState = null;
+		for (Map<String, Object> addressMap : Address) {
+			designerCity = (String) addressMap.get("city");
+		     designerState = (String) addressMap.get("state");
+		    String country = (String) addressMap.get("country");
+		    String zip = (String) addressMap.get("zip");
+
+		    System.out.println("City: " + designerCity);
+		    System.out.println("State: " + designerState);
+		    System.out.println("Country: " + country);
+		    System.out.println("Zip: " + zip);
+		}
+		System.out.println(scheduledAddress.getAddress_id()+"----------");
+		return this.dateServices.getAllScheduledAddress(scheduledAddress.getUserid(), scheduledAddress.getAddress(),
+		scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(),
+		scheduledAddress.getZip(), scheduledAddress.getStatus(), result, result, result, scheduledAddress.getAddress_id(), 
+		scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id(), designerCity, designerState );
+	}  
+	
+	@RequestMapping(value = "/getMyScheduledAddress", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public  List<Map<ScheduledAddress, Object>> getMyScheduledAddress(@RequestBody Check checkout){
+		ScheduledAddress scheduledAddress = new ScheduledAddress();
+		String token = checkout.getToken();
+		System.out.println("2                 " +token);
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		scheduledAddress.setUserid(userid);
+		System.out.println("<---->"+userid);
+		System.out.println(scheduledAddress.getUserid());
+		List<Map<String, Object>> Address=this.dateServices.getMyAddress(userid);
+		String designerCity = null;
+		String designerState = null;
+		/*
+		for (Map<String, Object> addressMap : Address) {
+			designerCity = (String) addressMap.get("city");
+		     designerState = (String) addressMap.get("state");
+		    String country = (String) addressMap.get("country");
+		    String zip = (String) addressMap.get("zip");
+
+		    System.out.println("City: " + designerCity);
+		    System.out.println("State: " + designerState);
+		    System.out.println("Country: " + country);
+		    System.out.println("Zip: " + zip);
+		}*/
+		System.out.println(scheduledAddress.getAddress_id()+"----------");
+		return this.dateServices.getMyScheduledAddress(scheduledAddress.getUserid(), scheduledAddress.getAddress(),
+		scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(),
+		scheduledAddress.getZip(), scheduledAddress.getStatus(), result, result, result, scheduledAddress.getAddress_id(), 
+		scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id(), designerCity, designerState );
+	}  
+	
+	
+	@RequestMapping(value = "/downloadMyScheduledAddresses", method = RequestMethod.POST, produces = MediaType.APPLICATION_PDF_VALUE)
+	@ResponseBody
+	public ResponseEntity<byte[]> downloadMyScheduledAddresses(@RequestBody Check checkout) throws MalformedURLException, IOException {
+	    ScheduledAddress scheduledAddress = new ScheduledAddress();
+	    String token = checkout.getToken();
+	    String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+	    String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+	    int userid = Integer.parseInt(result);
+	    scheduledAddress.setUserid(userid);
+	    String designerCity = null;
+		String designerState = null;
+		List<ScheduledAddress> schedules = this.dateServices.getMyScheduledAddressDownload(scheduledAddress.getUserid(), scheduledAddress.getAddress(),
+	    		scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(),
+	    		scheduledAddress.getZip(), scheduledAddress.getStatus(), result, result, result, scheduledAddress.getAddress_id(), 
+	    		scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id(), scheduledAddress.getMeasurement_id(), designerCity, designerState );
+	    // Create a PDF document
+	    Document document = new Document();
+	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+	    try {
+	        PdfWriter.getInstance(document, baos);
+	        document.open();
+
+	        Image image = Image.getInstance("http://localhost:8080/AIMORCProject/images/aimorc_logo1.jpg");
+            image.setAlignment(Image.ALIGN_CENTER);
+            image.scaleToFit(100, 100);
+            document.add(image);
+	     
+	        PdfPTable table = new PdfPTable(1); // 1 column
+	        table.setWidthPercentage(100); // Table width 100% of page widt
+	        float cellHeight = 20;
+	        for (ScheduledAddress schedule : schedules) { 
+	        	PdfPCell cell = new PdfPCell();
+
+	            // Add borders to the cell
+	            cell.setBorderWidth(1);
+	            cell.setPadding(5);
+
+	            cell.addElement(new Paragraph("Name : " + schedule.getFirstname() + " " + schedule.getLastname()));
+	            cell.addElement(new Paragraph("Phone Number : " + schedule.getPhonenum()));
+	            cell.addElement(new Paragraph("Date and Time : " + schedule.getDate_and_time()));
+	            cell.addElement(new Paragraph("Address : " + schedule.getAddress() + ", " + schedule.getAddress1() + ", " + schedule.getCity() + ", " + schedule.getState() + ", " + schedule.getCountry() + " - " + schedule.getZip()));
+	            cell.addElement(new Paragraph("Status : " + schedule.getStatus()));
+
+	            table.addCell(cell);
+	            
+	         // Add an empty cell for spacing
+	            PdfPCell spaceCell = new PdfPCell();
+	            spaceCell.setFixedHeight(cellHeight);
+	            spaceCell.setBorderWidth(0);
+	            table.addCell(spaceCell);
+	        }
+
+	        document.add(table);
+	        document.close();
+	    } catch (DocumentException e) {
+	        e.printStackTrace();
+	    }
+
+	    // Convert ByteArrayOutputStream to a byte array
+	    byte[] pdfContents = baos.toByteArray();
+
+	    // Set the content disposition header for attachment
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.APPLICATION_PDF);
+	    headers.setContentDispositionFormData("attachment", "mySchedules.pdf");
+
+	    // Return the PDF as a ResponseEntity
+	    return new ResponseEntity<>(pdfContents, headers, HttpStatus.OK);
+	} 
+	
+	@RequestMapping(value = "/getMyCompletedSchedules", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public  List<Map<ScheduledAddress, Object>> getMyCompletedSchedules(@RequestBody Check checkout){
+		ScheduledAddress scheduledAddress = new ScheduledAddress();
+		String token = checkout.getToken();
+		System.out.println("2                 " +token);
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int userid = Integer.parseInt(result);
+		scheduledAddress.setUserid(userid);
+		System.out.println("<--My Completed Schedules-->"+userid);
+		System.out.println(scheduledAddress.getUserid());
+		List<Map<String, Object>> Address=this.dateServices.getMyAddress(userid);
+		String designerCity = null;
+		String designerState = null;
+		for (Map<String, Object> addressMap : Address) {
+			designerCity = (String) addressMap.get("city");
+		     designerState = (String) addressMap.get("state");
+		    String country = (String) addressMap.get("country");
+		    String zip = (String) addressMap.get("zip");
+
+		    System.out.println("City: " + designerCity);
+		    System.out.println("State: " + designerState);
+		    System.out.println("Country: " + country);
+		    System.out.println("Zip: " + zip);
+		}
+		System.out.println(scheduledAddress.getAddress_id()+"----------");
+		return this.dateServices.getMyCompletedSchedules(scheduledAddress.getUserid(), scheduledAddress.getAddress(),
+		scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(),
+		scheduledAddress.getZip(), scheduledAddress.getStatus(), result, result, result, scheduledAddress.getAddress_id(), 
+		scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id(), designerCity, designerState );
+	}  
+	
+	
+
+	@RequestMapping(value = "/getSingleScheduledAddressInfo", method = RequestMethod.POST, produces = "application/json")
+	@ResponseBody
+	public List<Map<ScheduledAddress, Object>> getSingleScheduledAddressInfo(@RequestBody Check checkout) {
+	    ScheduledAddress scheduledAddress = new ScheduledAddress();
+	    String token = checkout.getToken();
+	    System.out.println("2 " + token);
+	    String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+	    String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+	    int userid = Integer.parseInt(result);
+	    scheduledAddress.setUserid(userid);
+	    scheduledAddress.setScheduled_id(checkout.getScheduled_id()); // Add this line to set the scheduledId
+	    System.out.println("--->"+checkout.getScheduled_id());
+//	    return this.dateServices.getSingleScheduledAddressInfo(
+//	        scheduledAddress.getUserid(), scheduledAddress.getAddress(), scheduledAddress.getAddress1(),
+//	        scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(),
+//	        scheduledAddress.getZip(), scheduledAddress.getStatus(), result, result, result,
+//	        scheduledAddress.getAddress_id(), scheduledAddress.getDate_and_time(),
+//	        scheduledAddress.getScheduled_id()
+//	    );
+	    return this.dateServices.getSingleScheduledAddressInfo(
+		        scheduledAddress.getScheduled_id()
+		    );
+	}
+
+	
 	@RequestMapping(value = "/getDeliveryAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getDeliveryAddress(@RequestBody Check checkout){
@@ -88,6 +493,8 @@ public class CheckoutController {
 		System.out.println(scheduledAddress.getState());
 		return this.dateServices.getDeliveryAddress(scheduledAddress.getUserid(),scheduledAddress.getAddress(),scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(), scheduledAddress.getZip(), scheduledAddress.getAddress_id(), deliveryaddress.getDel_id() );
 	}  
+	
+	
 	
 	
 	@RequestMapping(value = "/setSchedulerAddress", method = RequestMethod.POST, produces = "application/json")
@@ -275,7 +682,69 @@ public class CheckoutController {
 		return this.dateServices.cancelScheduledPickUp(scheduledAddress);
 	}
 
-
+	@RequestMapping(value = "/saveMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
+	  @ResponseBody
+	  public int   saveMeasurementDetails(@RequestBody Check checkout) { //Map<String, Object>{
+		String token = checkout.getToken();
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int designer_userid = Integer.parseInt(result);
+		//System.out.println("<--->"+designer_userid);
+		//checkout.setUserid(userid);
+		checkout.setDesigner_userid(designer_userid);
+		this.dateServices.updateScheduleStatus(checkout.getScheduled_id(), checkout.getStatus(), checkout.getUserid(), checkout.getDesigner_userid());
+		 return this.dateServices.saveMeasurementDetails(checkout.getUserid(), checkout.getGender(), checkout.getFabricCollected(), checkout.getDressing_category(), checkout.getMeasurement_unit(), checkout.getShirts_collar_size(), checkout.getShirts_sleeve_length(), checkout.getShirts_size(), checkout.getT_shirt_size(), checkout.getPant_inseam_length(), checkout.getPant_size(), checkout.getPant_waist_size(), checkout.getBlouse_bust_size(), checkout.getBlouse_length(), checkout.getBlouse_neck_size(), checkout.getBlouse_shoulder_size(), checkout.getBlouse_sleeve_length(), checkout.getBlouse_waist_size(), checkout.getTops_bust_size(), checkout.getTops_shoulder_size(), checkout.getTops_sleeve_length(), checkout.getTops_waist_size() );
+	  }
+	
+	@RequestMapping(value = "/updateMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
+	  @ResponseBody
+	  public int   updateMeasurementDetails(@RequestBody Check checkout) { //Map<String, Object>{
+		String token = checkout.getToken();
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int designer_userid = Integer.parseInt(result);
+		System.out.println("<--->"+designer_userid);
+		//checkout.setUserid(userid);
+		checkout.setDesigner_userid(designer_userid);
+		//System.out.println(checkout.getFabricCollected());
+		
+		this.dateServices.updateScheduleStatus(checkout.getScheduled_id(), checkout.getStatus(), checkout.getUserid(), checkout.getDesigner_userid());
+		return this.dateServices.updateMeasurementDetails(checkout.getMeasurement_id(), checkout.getGender(), checkout.getFabricCollected(), checkout.getDressing_category(), checkout.getMeasurement_unit(), checkout.getShirts_collar_size(), checkout.getShirts_sleeve_length(), checkout.getShirts_size(), checkout.getT_shirt_size(), checkout.getPant_inseam_length(), checkout.getPant_size(), checkout.getPant_waist_size(), checkout.getBlouse_bust_size(), checkout.getBlouse_length(), checkout.getBlouse_neck_size(), checkout.getBlouse_shoulder_size(), checkout.getBlouse_sleeve_length(), checkout.getBlouse_waist_size(), checkout.getTops_bust_size(), checkout.getTops_shoulder_size(), checkout.getTops_sleeve_length(), checkout.getTops_waist_size() );
+	  }
+	
+	@RequestMapping(value = "/acceptSchedule", method = RequestMethod.POST, produces = "application/json") //updateDesignerId
+	  @ResponseBody
+	  public int   acceptSchedule(@RequestBody Check checkout) { //Map<String, Object>{
+		String token = checkout.getToken();
+		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+		int designer_userid = Integer.parseInt(result);
+		System.out.println("<--here-->"+designer_userid);
+		//checkout.setUserid(userid);
+		checkout.setDesigner_userid(designer_userid);
+		//System.out.println(checkout.getFabricCollected());
+		
+		return this.dateServices.assignDesignerIdForSchedule(checkout.getScheduled_id(), checkout.getDesigner_userid());
+		//return this.dateServices.updateMeasurementDetails(checkout.getMeasurement_id(), checkout.getGender(), checkout.getFabricCollected(), checkout.getDressing_category(), checkout.getMeasurement_unit(), checkout.getShirts_collar_size(), checkout.getShirts_sleeve_length(), checkout.getShirts_size(), checkout.getT_shirt_size(), checkout.getPant_inseam_length(), checkout.getPant_size(), checkout.getPant_waist_size(), checkout.getBlouse_bust_size(), checkout.getBlouse_length(), checkout.getBlouse_neck_size(), checkout.getBlouse_shoulder_size(), checkout.getBlouse_sleeve_length(), checkout.getBlouse_waist_size(), checkout.getTops_bust_size(), checkout.getTops_shoulder_size(), checkout.getTops_sleeve_length(), checkout.getTops_waist_size() );
+	  }
+	
+	
+	@RequestMapping(value = "/getUserPrefernceMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
+	  @ResponseBody
+	  public List<Map<String, Object>>   getUserPrefernceMeasurementDetails(@RequestBody Check checkout) { 
+		 return this.dateServices.getUserPrefernceMeasurementDetails(checkout.getMeasurement_id());
+	}
+	
+	@RequestMapping(value = "/deleteMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
+	  @ResponseBody
+	  public int   deleteMeasurementDetails(@RequestBody Check checkout) { //Map<String, Object>{
+//		String token = checkout.getToken();
+//		String tokenUsername = restTemplate.postForObject("http://localhost:8081/decodeToken", token, String.class);
+//		String result = restTemplate.postForObject("http://localhost:8081/getUserId", tokenUsername, String.class);
+//		int userid = Integer.parseInt(result);
+//		checkout.setUserid(userid);
+		 return this.dateServices.deleteMeasurementDetails(checkout.getMeasurement_id());
+		}
 	
 	  @RequestMapping(value = "/deliveryProfileAddr", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
@@ -288,9 +757,7 @@ public class CheckoutController {
 			int userid = (int) Integer.parseInt(result);
 			System.out.println(userid+" deliveryProfileAddr is "+ this.dateServices.deliveryProfileAddr(userid));
 			return this.dateServices.deliveryProfileAddr(userid);
-            
-
-}
+	      }
 	  
 	  @RequestMapping(value = "/displaydeliveryAddr", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
