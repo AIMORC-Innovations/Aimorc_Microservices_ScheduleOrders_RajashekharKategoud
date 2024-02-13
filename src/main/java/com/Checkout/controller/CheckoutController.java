@@ -64,6 +64,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import com.itextpdf.text.Image;
 
+//this.dateServices.methodName(); points to the method in the CheckoutServices.java file
 
 @Controller
 @CrossOrigin("*")
@@ -87,6 +88,7 @@ public class CheckoutController {
         this.objectMapper = objectMapper;
     }
     
+    //calculates the distances between the designer location and user delivery location and returns distance in km.
     //@GetMapping("/calculateDistance")
     @RequestMapping(value = "/calculateDistance", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
@@ -206,6 +208,7 @@ public class CheckoutController {
 //        return response; // Return the response from OpenRouteService API
 //    }
 
+    //get the Schedule address for user ,it will take address and userid as arugmenet
 	@RequestMapping(value = "/getScheduler", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public List<Map<Date, Object>> getScheduler(@RequestBody Check checkout) {
@@ -223,6 +226,7 @@ public class CheckoutController {
 		return this.dateServices.getScheduler(date.getUserid(), date.getDate(), date.getDel_address1(), date.getCity(), date.getCountry(), date.getState(), date.getZip());
 	}
 	
+	//get the Schedule address for user ,it will take userid as argument
 	@RequestMapping(value = "/getScheduledAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getScheduledAddress(@RequestBody Check checkout){
@@ -237,6 +241,7 @@ public class CheckoutController {
 		return this.dateServices.getScheduledAddress(scheduledAddress.getUserid(), scheduledAddress.getAddress(),scheduledAddress.getAddress1(), scheduledAddress.getCity(), scheduledAddress.getState(), scheduledAddress.getCountry(), scheduledAddress.getZip(), scheduledAddress.getStatus(), scheduledAddress.getAddress_id(), scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id() );
 	}  
 	
+	//is used to get the measurements of logged in users based on the userid
 	@RequestMapping(value = "/getMyMeasurements", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getMyMeasurements(@RequestBody Check checkout){
@@ -252,6 +257,7 @@ public class CheckoutController {
 		return this.dateServices.getMyMeasurementsForMySchedules( checkout.getUserid());
 	}  
 	
+	//is used to get the measurements of logged in users based on the userid when scheduling the appointment
 	@RequestMapping(value = "/getMyMeasurementsForMySchedules", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getMyMeasurementsForMySchedules(@RequestBody Check checkout){
@@ -280,6 +286,7 @@ public class CheckoutController {
 		return myMeasurements; //useraddressdetails
 	}*/
 	
+	//is used to get the all scheduled addresses
 	@RequestMapping(value = "/getAllScheduledAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getAllScheduledAddress(@RequestBody Check checkout){
@@ -313,6 +320,7 @@ public class CheckoutController {
 		scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id(), designerCity, designerState );
 	}  
 	
+	//is used to get my scheduled addresses
 	@RequestMapping(value = "/getMyScheduledAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getMyScheduledAddress(@RequestBody Check checkout){
@@ -347,7 +355,7 @@ public class CheckoutController {
 		scheduledAddress.getDate_and_time(), scheduledAddress.getScheduled_id(), designerCity, designerState );
 	}  
 	
-	
+	//is used to get the all scheduled addresses in the PDF format for the designers 
 	@RequestMapping(value = "/downloadMyScheduledAddresses", method = RequestMethod.POST, produces = MediaType.APPLICATION_PDF_VALUE)
 	@ResponseBody
 	public ResponseEntity<byte[]> downloadMyScheduledAddresses(@RequestBody Check checkout) throws MalformedURLException, IOException {
@@ -419,6 +427,7 @@ public class CheckoutController {
 	    return new ResponseEntity<>(pdfContents, headers, HttpStatus.OK);
 	} 
 	
+	//is used to get the all completed schedules
 	@RequestMapping(value = "/getMyCompletedSchedules", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getMyCompletedSchedules(@RequestBody Check checkout){
@@ -453,7 +462,7 @@ public class CheckoutController {
 	}  
 	
 	
-
+	//is used to get the address details of scheduled address based on scheduled id
 	@RequestMapping(value = "/getSingleScheduledAddressInfo", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public List<Map<ScheduledAddress, Object>> getSingleScheduledAddressInfo(@RequestBody Check checkout) {
@@ -478,7 +487,7 @@ public class CheckoutController {
 		    );
 	}
 
-	
+	// used to get the delivery address given for a schedule
 	@RequestMapping(value = "/getDeliveryAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public  List<Map<ScheduledAddress, Object>> getDeliveryAddress(@RequestBody Check checkout){
@@ -496,7 +505,7 @@ public class CheckoutController {
 	
 	
 	
-	
+	//used to add the delivery address given for a schedule.
 	@RequestMapping(value = "/setSchedulerAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public void schedulingPickUpAddr(@RequestBody Check checkout){
@@ -518,6 +527,7 @@ public class CheckoutController {
 			//dateServices.updatePickUpAddr(checkout.getCity(),checkout.getCountry(),checkout.getDel_address1(),checkout.getState(),checkout.getZip(), userid);
 	}
 	
+	//used to get scheduler address of the user
 	@RequestMapping(value = "/getSchedulerAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public void getschedulingPickUpAddr(@RequestBody Check checkout){
@@ -531,6 +541,7 @@ public class CheckoutController {
 			dateServices.updatePickUpAddr(checkout.getCity(),checkout.getCountry(),checkout.getDel_address1(),checkout.getState(),checkout.getZip(), userid);
 	}
 
+	//sused to add the delivery address given for a schedule.
 	@RequestMapping(value = "/setScheduler", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public void schedulingPickUp(@RequestBody Check checkout) {
@@ -557,6 +568,7 @@ public class CheckoutController {
 
 	}
 	
+	//used to set the pickup address given for a created schedule
 	@RequestMapping(value = "/setPickUpScheduler", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public void setPickUpScheduler(@RequestBody ScheduledAddress scheduledAddress) {
@@ -575,6 +587,7 @@ public class CheckoutController {
 
 	}
 	
+	//used to edit the pickup address given for a created schedule 
 	@RequestMapping(value = "/editScheduler", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public void editPickUpScheduler(@RequestBody ScheduledAddress scheduledAddress) {
@@ -593,7 +606,7 @@ public class CheckoutController {
 
 	}
 	
-	
+	//used to edit the devlivery address
 	@RequestMapping(value = "/editDeliveryAddress", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public void editDeliveryAddress(@RequestBody ScheduledAddress scheduledAddress) {
@@ -612,6 +625,7 @@ public class CheckoutController {
 
 	}
 
+	//used to cancel the pickup address given for a created schedule
 	@RequestMapping(value = "/cancelScheduler", method = RequestMethod.POST, produces = "application/json")
 	public ResponseEntity<String> cancelPickUp(@RequestBody Check checkout) {
 		Date date = new Date();
@@ -624,6 +638,7 @@ public class CheckoutController {
 		return this.dateServices.cancelPickUp(date);
 	}
 	
+	//used to delete the pickup address given for a created schedule
 	@RequestMapping(value = "/deleteScheduler", method = RequestMethod.POST, produces = "application/json")
 	public ResponseEntity<String> deleteScheduledPickUp(@RequestBody ScheduledAddress scheduledAddress) {
 		//ScheduledAddress scheduledAddress = new ScheduledAddress();
@@ -637,6 +652,7 @@ public class CheckoutController {
 		return this.dateServices.deleteScheduledPickUp(scheduledAddress);
 	}
 	
+	//used to check the address based on the address id
 	@RequestMapping(value = "/checkAddressId", method = RequestMethod.POST, produces = "application/json")
 	public void checkAddressId(@RequestBody ScheduledAddress scheduledAddress, HttpServletRequest request, HttpServletResponse response)
 			throws  ServletException, IOException{
@@ -655,6 +671,7 @@ public class CheckoutController {
 		}
 	}
 	
+	//used to delete the address based on the address id
 	@RequestMapping(value = "/deleteAddressId", method = RequestMethod.POST, produces = "application/json")
 	public ResponseEntity<String> deleteAddressId(@RequestBody ScheduledAddress scheduledAddress) {
 		//ScheduledAddress scheduledAddress = new ScheduledAddress();
@@ -669,6 +686,7 @@ public class CheckoutController {
 	}
 	
 
+	//used to cancel the schedule
 	@RequestMapping(value = "/cancelScheduledAddress", method = RequestMethod.POST, produces = "application/json")
 	public ResponseEntity<String> cancelScheduledPickUp(@RequestBody ScheduledAddress scheduledAddress) {
 		//ScheduledAddress scheduledAddress = new ScheduledAddress();
@@ -682,6 +700,7 @@ public class CheckoutController {
 		return this.dateServices.cancelScheduledPickUp(scheduledAddress);
 	}
 
+	//used to save the measurements of the user
 	@RequestMapping(value = "/saveMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public int   saveMeasurementDetails(@RequestBody Check checkout) { //Map<String, Object>{
@@ -696,6 +715,7 @@ public class CheckoutController {
 		 return this.dateServices.saveMeasurementDetails(checkout.getUserid(), checkout.getGender(), checkout.getFabricCollected(), checkout.getDressing_category(), checkout.getMeasurement_unit(), checkout.getShirts_collar_size(), checkout.getShirts_sleeve_length(), checkout.getShirts_size(), checkout.getT_shirt_size(), checkout.getPant_inseam_length(), checkout.getPant_size(), checkout.getPant_waist_size(), checkout.getBlouse_bust_size(), checkout.getBlouse_length(), checkout.getBlouse_neck_size(), checkout.getBlouse_shoulder_size(), checkout.getBlouse_sleeve_length(), checkout.getBlouse_waist_size(), checkout.getTops_bust_size(), checkout.getTops_shoulder_size(), checkout.getTops_sleeve_length(), checkout.getTops_waist_size() );
 	  }
 	
+	//used to update the measurement details of user
 	@RequestMapping(value = "/updateMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public int   updateMeasurementDetails(@RequestBody Check checkout) { //Map<String, Object>{
@@ -712,6 +732,7 @@ public class CheckoutController {
 		return this.dateServices.updateMeasurementDetails(checkout.getMeasurement_id(), checkout.getGender(), checkout.getFabricCollected(), checkout.getDressing_category(), checkout.getMeasurement_unit(), checkout.getShirts_collar_size(), checkout.getShirts_sleeve_length(), checkout.getShirts_size(), checkout.getT_shirt_size(), checkout.getPant_inseam_length(), checkout.getPant_size(), checkout.getPant_waist_size(), checkout.getBlouse_bust_size(), checkout.getBlouse_length(), checkout.getBlouse_neck_size(), checkout.getBlouse_shoulder_size(), checkout.getBlouse_sleeve_length(), checkout.getBlouse_waist_size(), checkout.getTops_bust_size(), checkout.getTops_shoulder_size(), checkout.getTops_sleeve_length(), checkout.getTops_waist_size() );
 	  }
 	
+	//is used to accept schdule the by designer
 	@RequestMapping(value = "/acceptSchedule", method = RequestMethod.POST, produces = "application/json") //updateDesignerId
 	  @ResponseBody
 	  public int   acceptSchedule(@RequestBody Check checkout) { //Map<String, Object>{
@@ -728,13 +749,14 @@ public class CheckoutController {
 		//return this.dateServices.updateMeasurementDetails(checkout.getMeasurement_id(), checkout.getGender(), checkout.getFabricCollected(), checkout.getDressing_category(), checkout.getMeasurement_unit(), checkout.getShirts_collar_size(), checkout.getShirts_sleeve_length(), checkout.getShirts_size(), checkout.getT_shirt_size(), checkout.getPant_inseam_length(), checkout.getPant_size(), checkout.getPant_waist_size(), checkout.getBlouse_bust_size(), checkout.getBlouse_length(), checkout.getBlouse_neck_size(), checkout.getBlouse_shoulder_size(), checkout.getBlouse_sleeve_length(), checkout.getBlouse_waist_size(), checkout.getTops_bust_size(), checkout.getTops_shoulder_size(), checkout.getTops_sleeve_length(), checkout.getTops_waist_size() );
 	  }
 	
-	
+	//is used for the user to select the prefere measurement details while scheduling
 	@RequestMapping(value = "/getUserPrefernceMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public List<Map<String, Object>>   getUserPrefernceMeasurementDetails(@RequestBody Check checkout) { 
 		 return this.dateServices.getUserPrefernceMeasurementDetails(checkout.getMeasurement_id());
 	}
 	
+	//is used to delete the measurement details of user
 	@RequestMapping(value = "/deleteMeasurementDetails", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public int   deleteMeasurementDetails(@RequestBody Check checkout) { //Map<String, Object>{
@@ -746,6 +768,7 @@ public class CheckoutController {
 		 return this.dateServices.deleteMeasurementDetails(checkout.getMeasurement_id());
 		}
 	
+	//to get profile address for user ,it will take userid as argument
 	  @RequestMapping(value = "/deliveryProfileAddr", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public Map<String, Object>  deliveryProfileAddress(@RequestBody Check checkout) 
@@ -759,6 +782,7 @@ public class CheckoutController {
 			return this.dateServices.deliveryProfileAddr(userid);
 	      }
 	  
+	  //get delivery address for user ,it will take userid as argument
 	  @RequestMapping(value = "/displaydeliveryAddr", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public Map<String, Object>   displaydeliveryAddr(@RequestBody Check checkout) 
@@ -793,6 +817,8 @@ public class CheckoutController {
 			return true;
 	  }
 	  
+	  
+	  //to update delivery  address for user ,it will take userid, delivery address as argument 
 	  @RequestMapping(value = "/updatedeliveryAddr", method = RequestMethod.POST, produces = "application/json")
 	  @ResponseBody
 	  public boolean  deliveryAddress(@RequestBody  Check checkout) 
